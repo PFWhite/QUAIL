@@ -102,8 +102,7 @@ options [{
 */
 CREATE TABLE IF NOT EXISTS {{type}}_{{name}}(
 val TEXT PRIMARY KEY,
-display TEXT,
-FOREIGN KEY(val) REFERENCES {{form_name}}("{{name}}")
+display TEXT
 );
 
 INSERT INTO {{type}}_{{name}}(val, display)

@@ -18,7 +18,7 @@ class Instrumentor(file_util):
                 if filename == 'metadata.json':
                     return self.read(self.join([root, filename]), 'json')
 
-    def fields_for_instrument(self, instrument_name):
+    def fieldnames_for_instrument(self, instrument_name):
         fields = [field for field in self.metadata
                   if field['form_name'] == instrument_name
                   and field['field_name'] != self.unique_field['field_name']]
@@ -41,6 +41,9 @@ class Instrumentor(file_util):
 
         return zip(field_names, texttype)
 
+    def fields_for_instrument(self, instrument_name):
+        return self.fieldnames_for_instrument(instrument_name)
+
     def parse_select_choices(self, field):
         choices = field['select_choices_or_calculations'].split('|')
         field_name = field['field_name']
@@ -60,29 +63,52 @@ class Instrumentor(file_util):
             'fk_sub_clause': ''
         }
 
-    def get_instrument_table(self, instrument_name):
-        primary_key = None
-        primary_key_type = None
-        primary_keys = []
-        if instrument_name == self.unique_field['form_name']:
-            primary_keys = [
-                {'field': self.unique_field['field_name'], 'type': 'TEXT'},
-                {'field': 'redcap_event_name', 'type': 'TEXT'}
-            ]
+    def get_field(self, field_name):
+        # gets the field object for the field name
+        matches = [field for field in self.metadata if field['field_name'] == field_name]
+        if len(matches) == 1:
+            return matches[0]
         else:
-            primary_key = 'sql_id'
-            primary_key_type = 'INTEGER'
+            raise Exception('too many matching fields for %s' % field_name)
+
+    def is_lookup_field(self, field_name):
+        # checks to see if the field_name corresponds to a field type that
+        # needs a lookup, these are checkbox, dropdown, and radio
+        field = self.get_field(field_name)
+        lookups = [
+            'checkbox', 'dropdown', 'radio'
+        ]
+        return field['field_type'] in lookups
+
+    def make_lookup_foreign_keys(self, field_name, field_type):
+        # get the object that is required for the create instrument
+        # function in the redcap_schema.sql file
+        field = self.get_field(field_name)
+        return {
+            'field': field_name,
+            'other_table': field_type + '_' + field_name,
+            'other_key': 'val',
+            'fk_sub_clause': ''
+        }
+
+    def get_instrument_table(self, instrument_name):
+        # When someone need to support repeating forms
+        # add another field to this primary keys thing so
+        # that it makes them unique with it
+        # also make sure you are pulling the data down
+        primary_keys = [
+            {'field': self.unique_field['field_name'], 'type': 'TEXT'},
+            {'field': 'redcap_event_name', 'type': 'TEXT'}
+        ]
 
         return {
             'name': instrument_name,
-            'primary_key': primary_key,
-            'primary_key_type': primary_key_type,
             'primary_keys': primary_keys,
             'fields': self.fields_for_instrument(instrument_name),
-            'foreign_keys': [
-                # fix this for tuesday
-                # (self.get_subject_fk() if instrument_name != self.unique_field['form_name'])
-            ]
+            'foreign_keys': [self.make_lookup_foreign_keys(field, field_type)
+                             for field, field_type
+                             in self.fields_for_instrument(instrument_name)
+                             if self.is_lookup_field(field)]
         }
 
     def get_all_instruments(self):
