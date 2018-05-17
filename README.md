@@ -22,7 +22,165 @@ metadata and data into sqlite databases arranged by form.
 ```
 
 # Installation
- ## TODO: Write Here
+
+ 1. Run ` $ python setup.py install `
+ 2. Check the install ` $ quail`,
+    you should get some output that looks something like this.
+
+    ```$ quail
+    Usage: quail install <root>
+    quail redcap generate ( <quail.conf.yaml> <project_name> <token> <url> ) [-i --initialize]
+    quail redcap get_meta (<project_name>) [ -q <quail.conf.yaml> ]
+    quail redcap get_data (<project_name>) [ -q <quail.conf.yaml> ]
+    quail redcap gen_meta (<project_name>) [ -q <quail.conf.yaml> ]
+    quail redcap gen_data (<project_name>) [ -q <quail.conf.yaml> ]
+    quail redcap make_import_files (<project_name>) [ -q <quail.conf.yaml> ]
+
+
+    ```
+  3. Goto ` $ cd examples/hcvprod_pull/DANGER ` folder. You may have to make
+     this folder structure.
+  4. Use your `DANGER` folder to store all your first test runs, it is ignored in
+     the .gitignore so SHOULD not be included in git commits. This is up TO You
+     to make sure you don't commit live data to github.
+  5. Start by making a stub install that will create all your needed dirs and
+     files, ` $ quail install DANGER/ `  your new directory should look something
+     like this.
+
+     ```
+     $ ll
+     total 8.0K
+     drwxr-xr-x 2 cpb staff  68 May 17 14:35 batches
+     -rw-r--r-- 1 cpb staff 106 May 17 14:35 quail.conf.yaml
+     drwxr-xr-x 2 cpb staff  68 May 17 14:35 sources
+     -rw-r--r-- 1 cpb staff   0 May 17 14:35 subject_index.db
+     -rw-r--r-- 1 cpb staff 129 May 17 14:06 warning_live_data_in_here.txt
+     ```
+  6. Initialize this batch run using a real token and API url,
+
+
+      `$ quail redcap generate quail.conf.yaml hcvprod e3fc50a8NOTaTOKEN3df4b21ef20c29e https://myRedcap.org/api/ --initialize`
+
+
+      you should get some thing that looks like this
+
+      ```
+      $ tree
+      .
+      └── hcvprod_pull
+        └── DANGER
+            ├── batches
+            │   └── hcvprod
+            ├── quail.conf.yaml
+            ├── quail.conf.yaml.bak
+            ├── sources
+            │   └── hcvprod
+            │       └── redcap.conf.yaml
+            ├── subject_index.db
+            └── warning_live_data_in_here.txt
+            ```
+
+  7. Now get the target projects MetaData:
+      ` $ quail redcap get_meta hcvprod `
+
+      output looks like this (may take several minutes)
+      ```
+      $ quail redcap get_meta hcvprod
+      Using quail.conf.yaml at /Users/cpb/code/senrabc.github.com/QUAIL/examples/hcvprod_pull/DANGER/quail.conf.yaml
+      Pulling metadata for hcvprod
+      Done pulling metadata for hcvprod
+
+      ```   
+  8. Now, get redcap data as JSON ( this can take 10-60 minutes). This is a good
+     time to write documentation ;)
+      ```
+      $ quail redcap get_data hcvprod
+
+      Using quail.conf.yaml at /Users/cpb/code/senrabc.github.com/QUAIL/examples/hcvprod_pull/DANGER/quail.conf.yaml
+      Pulling data for hcvprod
+      Downloading Instrument cryoglobulinemia_followup
+      Wrote Instrument cryoglobulinemia_followup to path /Users/cpb/code/senrabc.github.com/QUAIL/examples/hcvprod_pull/DANGER/batches/hcvprod/2018-05-17/redcap_data_files/cryoglobulinemia_followup.json
+      Downloading Instrument conmeds_imported
+      Wrote Instrument conmeds_imported to path /Users/cpb/code/senrabc.github.com/QUAIL/examples/hcvprod_pull/DANGER/batches/hcvprod/2018-05-17/redcap_data_files/conmeds_imported.json
+      Downloading Instrument cbc_im_standard
+      Wrote Instrument cbc_im_standard to path /Users/cpb/code/senrabc.github.com/QUAIL/examples/hcvprod_pull/DANGER/batches/hcvprod/2018-05-17/redcap_data_files/cbc_im_standard.json
+
+      ...
+
+      Done pulling data for hcvprod
+
+      ```    
+  9. Convert the MetaData into a sqlite3 db
+        ```
+        $ quail redcap gen_meta hcvprod
+        Using quail.conf.yaml at /Users/cpb/code/senrabc.github.com/QUAIL/examples/hcvprod_pull/DANGER/quail.conf.yaml
+        ```
+        You should now have a database called `metadata.db` that contains
+        details about the forms, events, and lookup data values in your target
+        REDCap project.
+
+        ```
+        $ pwd
+        /Users/cpb/code/senrabc.github.com/QUAIL/examples/hcvprod_pull/DANGER/batches/hcvprod/2018-05-17
+        cpbmacs-MacBook-Pro:2018-05-17 cpb$ ls -lah
+        total 516K
+        drwxr-xr-x  6 cpb staff  204 May 17 15:16 .
+        drwxr-xr-x  3 cpb staff  102 May 17 14:55 ..
+        -rw-r--r--  1 cpb staff  290 May 17 15:13 batch_info.json
+        -rw-r--r--  1 cpb staff 512K May 17 15:16 metadata.db
+        drwxr-xr-x 83 cpb staff 2.8K May 17 15:13 redcap_data_files
+        drwxr-xr-x  9 cpb staff  306 May 17 14:57 redcap_metadata
+
+        $ sqlite3 metadata.db
+        SQLite version 3.16.0 2016-11-04 19:09:39
+        Enter ".help" for usage hints.
+        sqlite> .tables
+        arms              fields            instruments     
+        events            instrument_event  project         
+        sqlite>
+
+        ```
+ 10. Make sure you got back to the root of your `DANGER` folder, or whatever you
+     named your root folder for this batch run. Then to create a sqlite3 db of
+     all your data run (this can take a few minutes). Another good time to write
+     documentation:
+
+      ```
+      $ quail redcap gen_data hcvprod
+      Using quail.conf.yaml at /Users/cpb/code/senrabc.github.com/QUAIL/examples/hcvprod_pull/DANGER/quail.conf.yaml
+      Loading metadata...
+      Writing instruments tables...
+      Writing checkboxes tables...
+      Writing dropdowns tables...
+      Writing radios tables...
+      Done with the schema starting with inserts...
+      Wrote 25869 many rows to the adverse_events table
+      Redcap provided 23 many empty records for adverse_events
+      Wrote 25064 many rows to the ae_coding table
+      Redcap provided 15 many empty records for ae_coding
+
+      ...
+
+      Done with inserting data
+
+      $ cd batches/hcvprod/2018-05-17/
+
+      $ ll
+      total 115M
+      -rw-r--r--  1 cpb staff  290 May 17 15:13 batch_info.json
+      -rw-r--r--  1 cpb staff 114M May 17 15:27 data.db
+      -rw-r--r--  1 cpb staff 512K May 17 15:16 metadata.db
+      drwxr-xr-x 83 cpb staff 2.8K May 17 15:13 redcap_data_files
+      drwxr-xr-x  9 cpb staff  306 May 17 14:57 redcap_metadata
+
+      ```
+      You now have a data file with all your forms and events data for all
+      your subjects in `data.db`. You can access it with sqlite3, just like you
+      did the metadata.db. For information about the structure of data.db see
+      the "Meta(other)" section of the README below.
+
+
+
 
 # Usage examples
   ## TODO: Write Here
