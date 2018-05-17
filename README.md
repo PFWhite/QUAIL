@@ -1,10 +1,61 @@
-# Q.U.A.I.L. QUAIL Univeral Analytics of Informatic Linkages
+# Q.U.A.I.L. QUAIL Universal Analytics of Informatic Linkages
 This is a project used to pull down and analyze data from REDCap. It places the project
 metadata and data into sqlite databases arranged by form.
 
-* QUAIL
-QUAIL Universal Analytics of Informatic Linkages
+![Python Version](https://img.shields.io/pypi/pyversions/Django.svg)
+![Build Status](https://img.shields.io/codeship/d6c1ddd0-16a3-0132-5f85-2e35c05e22b1.svg)
 
+```
+
+
+
+   ____  _    _         _____ _      
+  / __ \| |  | |  /\   |_   _| |     
+ | |  | | |  | | /  \    | | | |     
+ | |  | | |  | |/ /\ \   | | | |     
+ | |__| | |__| / ____ \ _| |_| |____
+  \___\_\\____/_/    \_\_____|______|
+
+   Q.U.A.I.L. Universal Analytics of Informatic Linkages
+
+
+```
+
+# Installation
+ ## TODO: Write Here
+
+# Usage examples
+  ## TODO: Write Here
+
+# Development Setup
+  ## TODO: Write Here
+
+# How to contribute
+
+1. Fork it (<https://github.com/ctsit/QUAIL>)
+2. Create your feature branch (`git checkout -b feature/fooBar`)
+3. Commit your changes (`git commit -am 'Add some fooBar'`)
+4. Push to the branch (`git push origin feature/fooBar`)
+5. Create a new Pull Request  
+
+# Release History
+  ## TODO: Write Here
+
+# License
+  ## TODO: Write Here
+
+# Author(s)
+  ## TODO: Write Here
+
+# Issues
+  ## TODO: Write Here
+
+# Wiki  
+  ## TODO: Write Here
+
+# Meta (other)
+
+## Detailed description of QUAIL and its motivations
 * Scenario
 Quilliam the quail wants a warehouse of data available to him which can link many
 different types of data together. It is important as well that it is able to pull
