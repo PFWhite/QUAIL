@@ -231,7 +231,6 @@ def gen_data(quail_conf, project_name, batch):
                 db.batch_insert(batches=batches).executescript()
                 db.commit()
             print('Wrote {} many rows to the {} table'.format(written_num, tablename))
-            print('Redcap provided {} many empty records for {}'.format(empty_num, tablename))
 
     print('Done with inserting data')
 

@@ -75,7 +75,7 @@ class Instrumentor(file_util):
     def get_subject_fk(self, field_name):
         """
         Gives the foreign key object referring back to the unique field
-        on the form
+        on the form.
         """
         return {
             'field': field_name,
@@ -83,6 +83,7 @@ class Instrumentor(file_util):
             'other_key': self.unique_field['field_name'],
             'fk_sub_clause': ''
         }
+
 
     def get_field(self, field_name):
         """
@@ -112,6 +113,19 @@ class Instrumentor(file_util):
         ]
         return field['field_type'] in lookups
 
+    def instrument_for_field(self, field_name):
+        if '___' in field_name:
+            field_name = field_name.split('___')[0]
+        return [field['form_name'] for field in self.metadata if field['field_name'] == field_name][0]
+
+    def get_lookup_fk(self, field_name):
+        return {
+            'field': field_name,
+            'other_table': field_name,
+            'other_key': 'val',
+            'fk_sub_clause': ''
+        }
+
     def get_instrument_table(self, instrument_name):
         # When someone need to support repeating forms
         # add another field to this primary keys thing so
@@ -126,15 +140,19 @@ class Instrumentor(file_util):
         fields = [field for field in fields if field[0] != self.unique_field['field_name']]
         fields = [field for field in fields if field[0] != 'redcap_event_name']
 
-        return {
+        table_data = {
             'name': instrument_name,
             'primary_keys': primary_keys,
             'fields': fields,
-            'foreign_keys': [self.get_subject_fk(field)
+            'foreign_keys': [self.get_lookup_fk(field)
                              for field, field_type
                              in self.fields_for_instrument(instrument_name)
                              if self.is_lookup_field(field)]
         }
+        if table_data['name'] != self.unique_field['form_name']:
+            subject_fk = self.get_subject_fk(self.unique_field['field_name'])
+            table_data['foreign_keys'].append(subject_fk)
+        return table_data
 
     def get_all_instruments(self):
         return [self.get_instrument_table(name) for name in self.instruments]
