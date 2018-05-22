@@ -72,6 +72,8 @@ def main(args):
         if not args.get('<quail.conf.yaml>'):
             args = find_local_config(args)
         qc = args.get('<quail.conf.yaml>')
+        if qc:
+            print('Using quail config at {}'.format(qc))
 
     if args.get('install'):
         install.run(args.get('<root>'))
