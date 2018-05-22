@@ -72,9 +72,13 @@ class Instrumentor(file_util):
             parsed.append(( export_name, value, display ))
         return parsed
 
-    def get_subject_fk(self):
+    def get_subject_fk(self, field_name):
+        """
+        Gives the foreign key object referring back to the unique field
+        on the form
+        """
         return {
-            'field': self.unique_field['field_name'],
+            'field': field_name,
             'other_table': self.unique_field['form_name'],
             'other_key': self.unique_field['field_name'],
             'fk_sub_clause': ''
@@ -108,17 +112,6 @@ class Instrumentor(file_util):
         ]
         return field['field_type'] in lookups
 
-    def make_lookup_foreign_keys(self, field_name, field_type):
-        # get the object that is required for the create instrument
-        # function in the redcap_schema.sql file
-        field = self.get_field(field_name)
-        return {
-            'field': field_name,
-            'other_table': field_type + '_' + field_name,
-            'other_key': 'val',
-            'fk_sub_clause': ''
-        }
-
     def get_instrument_table(self, instrument_name):
         # When someone need to support repeating forms
         # add another field to this primary keys thing so
@@ -137,7 +130,7 @@ class Instrumentor(file_util):
             'name': instrument_name,
             'primary_keys': primary_keys,
             'fields': fields,
-            'foreign_keys': [self.make_lookup_foreign_keys(field, field_type)
+            'foreign_keys': [self.get_subject_fk(field)
                              for field, field_type
                              in self.fields_for_instrument(instrument_name)
                              if self.is_lookup_field(field)]

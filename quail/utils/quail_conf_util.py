@@ -86,7 +86,7 @@ class QuailConfig(file_util):
         """
         try:
             source_batches = list(self.data['batches'][source_name].values())
-            batch_path = [batch['path'] for batch in source_batches if batch['date']==batch][0]
+            batch_path = [b['path'] for b in source_batches if b['date']==batch][0]
         except:
             raise Exception("""
             Check that batches exist for project {proj}, batch requested: {batch}

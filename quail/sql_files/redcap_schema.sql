@@ -74,13 +74,13 @@ options [(
 where export_name is the name of the field value when exporting a form from
 redcap. Note that the threee fields are in a tuple
 */
-CREATE TABLE IF NOT EXISTS checkbox_{{name}}(
+CREATE TABLE IF NOT EXISTS {{name}}(
 export_name TEXT PRIMARY KEY,
 val TEXT,
 display TEXT
 );
 
-INSERT INTO checkbox_{{name}}(export_name, val, display)
+INSERT INTO {{name}}(export_name, val, display)
 VALUES {% for export, val, display in options -%}
 ('{{export}}', '{{val}}', '{{display}}')
 {%- if not loop.last %},{% else %};{% endif -%}
@@ -100,12 +100,12 @@ options [{
   }]
 }
 */
-CREATE TABLE IF NOT EXISTS {{type}}_{{name}}(
+CREATE TABLE IF NOT EXISTS {{name}}(
 val TEXT PRIMARY KEY,
 display TEXT
 );
 
-INSERT INTO {{type}}_{{name}}(val, display)
+INSERT INTO {{name}}(val, display)
 VALUES {% for val, display in options -%}
 ('{{val}}', '{{display}}')
 {%- if not loop.last %},{% else %};{% endif -%}
