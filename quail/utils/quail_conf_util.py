@@ -5,6 +5,10 @@ import yaml
 from quail.utils.file_manipulation_mixin import FileManipulationMixin as file_util
 
 class QuailConfig(file_util):
+    """
+    This class returns copied objects a lot so that the underlying data
+    is not changed by a consumer of the data
+    """
     def __init__(self, path):
         self.path = path
         self.data = self.read(path, 'yaml')
@@ -65,11 +69,32 @@ class QuailConfig(file_util):
         Returns the most recent batch path for a given source
         """
         try:
-            source_batches = list(self.data['batches'][source_name].items())
-            most_recent_batch_path = sorted(source_batches, key=lambda i: i[0])[-1][1]['path']
+            source_batches = list(self.data['batches'][source_name].values())
+            most_recent_batch_path = sorted(source_batches, key=lambda i: i['date'])[-1]['path']
         except:
-            most_recent_batch_path = file_util.join([self.get_root, 'batches', source_name])
+            raise Exception("""
+            Check that batches exist for project {proj}
+            You may need to run:
+            quail redcap get_meta {proj}
+            quail redcap get_data {proj}
+            """.format(proj=source_name))
         return copy(most_recent_batch_path)
+
+    def get_passed_batch(self, source_name, batch):
+        """
+        Returns the path of a particular batch
+        """
+        try:
+            source_batches = list(self.data['batches'][source_name].values())
+            batch_path = [batch['path'] for batch in source_batches if batch['date']==batch][0]
+        except:
+            raise Exception("""
+            Check that batches exist for project {proj}, batch requested: {batch}
+            You may need to run:
+            quail redcap get_meta {proj}
+            quail redcap get_data {proj}
+            """.format(proj=source_name,batch=batch))
+        return copy(batch_path)
 
 
     def save(self, path=None, backup_path=None):

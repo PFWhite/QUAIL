@@ -97,25 +97,28 @@ def get_data(quail_conf, project_name, pull_metadata=False):
     config.save()
     print('Done pulling data for {}'.format(project_name))
 
-def gen_meta(quail_conf, project_name):
+def gen_meta(quail_conf, project_name, batch):
     """
-    Generates the metadata.db in the most recent batch folder of the project.
+    Generates the metadata.db in the most recent batch, or the passed batch folder of the project.
     This database contains information about how the redcap is set up
     """
     config = QuailConfig(quail_conf)
-    most_recent_batch_path = config.get_most_recent_batch(project_name)
+    if not batch:
+        batch_path = config.get_most_recent_batch(project_name)
+    else:
+        batch_path = config.get_passed_batch(project_name, batch)
 
-    database_path = file_util.join([most_recent_batch_path, 'metadata.db'])
+    database_path = file_util.join([batch_path, 'metadata.db'])
     file_util.write(database_path)
     db = dynamic_schema(database_path)
     batch_size = 500
 
-    arm = redcap_metadata.Arm(most_recent_batch_path, batch_size)
-    event = redcap_metadata.Event(most_recent_batch_path, batch_size)
-    instrument = redcap_metadata.Instrument(most_recent_batch_path, batch_size)
-    instrument_event = redcap_metadata.InstrumentEvent(most_recent_batch_path, batch_size)
-    field = redcap_metadata.Field(most_recent_batch_path, batch_size)
-    project = redcap_metadata.Project(most_recent_batch_path, batch_size)
+    arm = redcap_metadata.Arm(batch_path, batch_size)
+    event = redcap_metadata.Event(batch_path, batch_size)
+    instrument = redcap_metadata.Instrument(batch_path, batch_size)
+    instrument_event = redcap_metadata.InstrumentEvent(batch_path, batch_size)
+    field = redcap_metadata.Field(batch_path, batch_size)
+    project = redcap_metadata.Project(batch_path, batch_size)
 
     db.create_table(**{
         'tables': [
@@ -141,7 +144,7 @@ def gen_meta(quail_conf, project_name):
     db.batch_insert(batches=project.insert_data).executescript()
     db.commit()
 
-def gen_data(quail_conf, project_name):
+def gen_data(quail_conf, project_name, batch):
     """
     Generates the data.db in the most recent batch folder of the project.
     This database contains all the data from the redcap data pull.
@@ -158,17 +161,20 @@ def gen_data(quail_conf, project_name):
     See docs/quail.org for a description of its schema
     """
     config = QuailConfig(quail_conf)
-    most_recent_batch_path = config.get_most_recent_batch(project_name)
+    if not batch:
+        batch_path = config.get_most_recent_batch(project_name)
+    else:
+        batch_path = config.get_passed_batch(project_name, batch)
 
-    redcap_data_path = file_util.join([most_recent_batch_path, 'redcap_data_files'])
-    database_path = file_util.join([most_recent_batch_path, 'data.db'])
+    redcap_data_path = file_util.join([batch_path, 'redcap_data_files'])
+    database_path = file_util.join([batch_path, 'data.db'])
     file_util.write(database_path)
     db = redcap_schema(database_path)
     # in the future make the batch size configurable
     batch_size = 500
 
     print('Loading metadata...')
-    instrumentor = redcap_sqlize.Instrumentor(most_recent_batch_path)
+    instrumentor = redcap_sqlize.Instrumentor(batch_path)
     subject_form = instrumentor.unique_field['form_name']
 
     print('Writing instruments tables...')
@@ -229,7 +235,7 @@ def gen_data(quail_conf, project_name):
 
     print('Done with inserting data')
 
-def make_import_files(quail_conf, project_name):
+def make_import_files(quail_conf, project_name, batch):
     """
     This action should be used when wanting to upload data to redcap from a quail instance.
     There in the batches/{project}/{most_recent}/imports folder will be csv files that
@@ -239,11 +245,14 @@ def make_import_files(quail_conf, project_name):
     redcap file importer, this problem will go away
     """
     config = QuailConfig(quail_conf)
-    most_recent_batch_path = config.get_most_recent_batch(project_name)
-    batch_imports_path = file_util.join([most_recent_batch_path, 'imports'])
+    if not batch:
+        batch_path = config.get_most_recent_batch(project_name)
+    else:
+        batch_path = config.get_passed_batch(project_name)
+    batch_imports_path = file_util.join([batch_path, 'imports'])
 
-    print('Building import csv files from database at {}'.format(most_recent_batch_path))
-    db = import_schema(most_recent_batch_path)
+    print('Building import csv files from database at {}'.format(batch_path))
+    db = import_schema(batch_path)
 
     forms = db.get_forms().execute().fetchall()
     forms = [item[0] for item in forms]
