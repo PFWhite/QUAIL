@@ -201,11 +201,7 @@ def gen_data(quail_conf, project_name):
             table_info = db.table_info(table=tablename).execute().fetchall()
             name_index = 1
             is_pk_index = 5
-            if tablename != subject_form:
-                cols = [row[name_index] for row in table_info if not row[is_pk_index]]
-            else:
-                cols = [row[name_index] for row in table_info]
-            cols.append('redcap_event_name')
+            cols = [row[name_index] for row in table_info]
             if type(data) != type([]):
                 data = [data]
             empty_num = 0
@@ -219,16 +215,11 @@ def gen_data(quail_conf, project_name):
                         'vals': []
                     })
                 val = [str(item.setdefault(col, None)) for col in cols]
-                val = [s.replace("\'","\'\'") if s != 'None' else '' for s in val]
-                nonempty = [s for s in val if s != '']
+                val = ['' if s == 'None' else s.replace("\'","\'\'") for s in val]
                 # every form will have a unique_field, redcap_event_name and form_complete
                 # the subject_form will also specify the primary key
-                required_fields = 3 if tablename == subject_form else 4
-                if len(nonempty) > required_fields:
-                    batches[-1]['vals'].append(val)
-                    written_num += 1
-                else:
-                    empty_num += 1
+                batches[-1]['vals'].append(val)
+                written_num += 1
 
             if len(batches) and len(batches[0]['vals']):
                 db.batch_insert(batches=batches).executescript()

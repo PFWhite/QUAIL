@@ -11,6 +11,23 @@ class Instrumentor(file_util):
         self.checkboxes = [field for field in self.metadata if field['field_type'] == 'checkbox']
         self.dropdowns = [field for field in self.metadata if field['field_type'] == 'dropdown']
         self.radios = [field for field in self.metadata if field['field_type'] == 'radio']
+        self.redcap_generated_fields = self.get_redcap_fields()
+
+    def get_redcap_fields(self):
+        instruments = set([f['form_name'] for f in self.metadata])
+        fields = []
+        for instrument in instruments:
+            fields.append(self.make_field(self.unique_field['field_name'], instrument))
+            fields.append(self.make_field('redcap_event_name', instrument))
+            fields.append(self.make_field('%s_complete' % instrument, instrument))
+        return fields
+
+    def make_field(self, field_name, instrument):
+        return {
+            'field_name': field_name,
+            'form_name': instrument,
+            'field_type': 'redcap_generated_field'
+        }
 
     def load_metadata(self, metadata_root):
         for root, dirs, files in self.walk(metadata_root):
@@ -64,16 +81,27 @@ class Instrumentor(file_util):
         }
 
     def get_field(self, field_name):
-        # gets the field object for the field name
+        """
+        It is important to remember that there are redcap fields that are not
+        in the metadata. These are the redcap_event name, and the FORMNAME_complete
+        fields. These will never be found because they are special fields.
+        Also there are the fields that have three underscores. these are the checkbox fields
+        """
         matches = [field for field in self.metadata if field['field_name'] == field_name]
         if len(matches) == 1:
             return matches[0]
+        elif field_name in [f['field_name'] for f in self.redcap_generated_fields]:
+            return [f for f in self.redcap_generated_fields if f['field_name'] == field_name][0]
+        elif '___' in field_name:
+            return [f for f in self.metadata if f['field_name'] == field_name.split('___')[0]][0]
         else:
-            raise Exception('too many matching fields for %s' % field_name)
+            raise Exception('too many matching fields for {} matches: {}'.format(field_name, len(matches)))
 
     def is_lookup_field(self, field_name):
         # checks to see if the field_name corresponds to a field type that
         # needs a lookup, these are checkbox, dropdown, and radio
+        if (field_name == 'redcap_event_name'):
+            return False
         field = self.get_field(field_name)
         lookups = [
             'checkbox', 'dropdown', 'radio'
@@ -101,10 +129,14 @@ class Instrumentor(file_util):
             {'field': 'redcap_event_name', 'type': 'TEXT'}
         ]
 
+        fields = self.fields_for_instrument(instrument_name)
+        fields = [field for field in fields if field[0] != self.unique_field['field_name']]
+        fields = [field for field in fields if field[0] != 'redcap_event_name']
+
         return {
             'name': instrument_name,
             'primary_keys': primary_keys,
-            'fields': self.fields_for_instrument(instrument_name),
+            'fields': fields,
             'foreign_keys': [self.make_lookup_foreign_keys(field, field_type)
                              for field, field_type
                              in self.fields_for_instrument(instrument_name)
