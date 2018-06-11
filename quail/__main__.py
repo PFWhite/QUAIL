@@ -91,8 +91,10 @@ def main(args):
                             url=args.get('<url>'),
                             init=args.get('-i'))
         elif args.get('get_meta'):
+            del conf['batch']
             redcap.get_meta(**conf)
         elif args.get('get_data'):
+            del conf['batch']
             redcap.get_data(**conf)
         elif args.get('gen_meta'):
             redcap.gen_meta(**conf)
