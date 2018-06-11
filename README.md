@@ -23,8 +23,11 @@ metadata and data into sqlite databases arranged by form.
 ```
 
 # Installation
+QUAIL is a python3 application. Make sure you are using the correct python and pip.
 
  1. Run ` $ python setup.py install `
+ This is not the recommended way of installing the application. Since this is a
+ python module, it is recommended that it be installed with `$ pip install ./QUAIL`
  2. Check the install ` $ quail`,
     you should get some output that looks something like this.
 
@@ -256,7 +259,7 @@ Here are some examples about where you would find information in a batch; all pa
 be prepended with whatever your data root is
 
 | data                                                            | path                                                                        |
-|-----------------------------------------------------------------+-----------------------------------------------------------------------------|
+|-----------------------------------------------------------------|-----------------------------------------------------------------------------|
 | the records for all subjects chemistry labs from redcap         | batch_name/redcap_data_files/chemistry_lab.json                             |
 | the records for all subjects neuro labs from redcap             | batch_name/redcap_data_files/neuro_lab.json                                 |
 | the records for all subjects neuro labs from redcap, in batch_2 | batch_2/redcap_data_files/neuro_lab.json                                    |
@@ -291,7 +294,7 @@ saved in the database as well
 
 my_redcap_form
 | col                | type                 |
-|--------------------+----------------------|
+|--------------------|----------------------|
 | sql_id             | integer primary keys |
 | subject_id         | text foreign key     |
 | my_field_name      | text                 |
@@ -313,7 +316,7 @@ These value display options are created in the sql database as lookup tables:
 
 field_name
 | col         | type             | note                                                |
-|-------------+------------------+-----------------------------------------------------|
+|-------------|------------------|-----------------------------------------------------|
 | export_name | text primary key | what the key will come back as when doing an export |
 | display     | text             | second part of the select choices                   |
 | value       | text             | first part of the select choices                    |
