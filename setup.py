@@ -17,7 +17,7 @@ config = {
         'docopt==0.6.2',
         'nose',
         'cappy',
-        'pyyaml==3.12',
+        'pyyaml==5.1',
         'Jinja2',
         'python-dateutil==2.6.0',
     ],
