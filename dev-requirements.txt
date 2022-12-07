@@ -1,5 +1,5 @@
 -e git+git@github.com:ctsit/cappy.git@e198fdd8b804bb669633477b606140ea18df91bb#egg=cappy
-certifi==2017.4.17
+certifi==2022.12.7
 chardet==3.0.3
 idna==2.5
 Jinja2==2.9.6
